@@ -39,14 +39,12 @@ function createWindow() {
   
   // Wait for Django to start, then load frontend
   setTimeout(() => {
-    // In production, load from frontend/dist
-    // For now, load Django admin or a simple page
+    // Load Django API health check page (simple test page)
+    // In production, this would load the Vue.js extension UI
     mainWindow.loadURL('http://localhost:8000/api/health/');
     
     // Open DevTools for debugging
-    if (process.env.NODE_ENV !== 'production') {
-      mainWindow.webContents.openDevTools();
-    }
+    mainWindow.webContents.openDevTools();
   }, 3000);
 }
 
