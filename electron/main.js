@@ -43,22 +43,27 @@ function createWindow() {
     // Load the Vue.js browser UI
     // First try to load from Vite dev server, then fallback to built files
     const devUrl = 'http://localhost:3000/src/browser/index.html';
+    
+    // For production, serve files through a simple HTTP server or use absolute file paths
+    // Since file:// has CORS issues, we'll serve through Django or use a local server
     const prodUrl = `file://${path.join(__dirname, '../frontend/dist/src/browser/index.html')}`;
     
-    console.log('Loading UI from:', prodUrl);
+    console.log('Attempting to load UI...');
     
-    // Try dev server first, then production build
+    // Try dev server first, then Django (which serves the UI)
     mainWindow.loadURL(devUrl).catch(() => {
-      mainWindow.loadURL(prodUrl).catch((err) => {
-        console.error('Failed to load UI:', err);
-        console.log('Falling back to API root');
-        // Fallback to API root
-        mainWindow.loadURL('http://localhost:8000/');
-      });
+      console.log('Dev server not available, loading from Django');
+      // Django serves the UI at root URL
+      mainWindow.loadURL('http://localhost:8000/');
     });
     
     // Open DevTools for debugging
     mainWindow.webContents.openDevTools();
+    
+    // Listen for console messages
+    mainWindow.webContents.on('console-message', (event, level, message) => {
+      console.log(`[Renderer ${level}]:`, message);
+    });
   }, 3000);
 }
 
