@@ -52,13 +52,24 @@
       Analyzing content...
     </div>
     
-    <div v-if="analysisResult" class="ai-results">
-      <div class="result-item">
+    <div v-if="analysisResult || defluffScore !== null" class="ai-results">
+      <div v-if="defluffScore !== null" class="result-item">
         <strong>Defluff Score:</strong> 
         <span :class="getDefluffClass()">{{ defluffScore }}/100</span>
+        <div v-if="defluffBreakdown" class="score-breakdown">
+          <div class="breakdown-item">
+            <span>Info Density:</span> <span>{{ defluffBreakdown.information_density || 'N/A' }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span>Ad Ratio:</span> <span>{{ defluffBreakdown.ad_ratio || 'N/A' }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span>Clickbait:</span> <span>{{ defluffBreakdown.clickbait || 'N/A' }}</span>
+          </div>
+        </div>
       </div>
-      <div v-if="factChecks.length > 0" class="result-item">
-        <strong>Fact Checks:</strong> {{ factChecks.length }} found
+      <div v-if="factChecks.length > 0" class="result-item fact-checks">
+        <strong>✅ Fact Checks:</strong> {{ factChecks.length }} verified claim(s)
       </div>
     </div>
 
@@ -141,14 +152,30 @@ const canGoForward = computed(() => historyIndex.value >= 0 && historyIndex.valu
 const analyzing = ref(false);
 const analysisResult = ref(null);
 const defluffScore = ref(null);
+const defluffBreakdown = ref(null);
 const factChecks = ref([]);
 const showSettings = ref(false);
+const pageError = ref(null);
+const isLoading = ref(false);
 
 const settings = ref({
   autoAnalyze: true,
   showFactChecks: true,
   minDefluffScore: 0
 });
+
+function isUrl(str) {
+  // Check if string looks like a URL
+  const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+  const hasProtocol = str.startsWith('http://') || str.startsWith('https://');
+  const hasDomain = urlPattern.test(str) || str.includes('.');
+  
+  // If it has a protocol or looks like a domain, treat as URL
+  if (hasProtocol || (hasDomain && !str.includes(' '))) {
+    return true;
+  }
+  return false;
+}
 
 function navigate() {
   let url = currentUrl.value.trim();
@@ -157,9 +184,15 @@ function navigate() {
     return;
   }
   
-  // Add protocol if missing
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url;
+  // Check if it's a search query or URL
+  if (!isUrl(url)) {
+    // Treat as search query - use DuckDuckGo (privacy-focused)
+    url = `https://duckduckgo.com/?q=${encodeURIComponent(url)}`;
+  } else {
+    // Add protocol if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
   }
   
   // Add to history (remove any forward history if we're not at the end)
@@ -173,6 +206,8 @@ function navigate() {
   // Update both display and loaded URL
   currentUrl.value = url;
   loadedUrl.value = url; // Only update iframe when we have complete URL
+  pageError.value = null; // Clear any previous errors
+  isLoading.value = true;
   
   // Auto-analyze if enabled
   if (settings.value.autoAnalyze) {
@@ -244,9 +279,11 @@ async function analyzeContent(url) {
     
     const scoreData = await scoreResponse.json();
     defluffScore.value = scoreData.defluff_score;
+    defluffBreakdown.value = scoreData.components || null;
     
   } catch (error) {
     console.error('Analysis error:', error);
+    // Don't show error to user, just log it
   } finally {
     analyzing.value = false;
   }
@@ -264,6 +301,8 @@ function onLoadStart() {
 }
 
 function onLoadStop() {
+  isLoading.value = false;
+  pageError.value = null;
   analyzing.value = false;
   // Update address bar to match loaded URL (in case of redirects)
   if (loadedUrl.value) {
@@ -274,6 +313,11 @@ function onLoadStop() {
   if (settings.value.autoAnalyze && loadedUrl.value) {
     analyzeContent(loadedUrl.value);
   }
+}
+
+function onLoadError() {
+  isLoading.value = false;
+  pageError.value = 'Unable to load this page. It may be blocked or unavailable.';
 }
 
 function onLoadError(event) {
