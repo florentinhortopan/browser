@@ -45,7 +45,7 @@
     <!-- Browser Content Area -->
     <div class="content-area">
       <!-- Welcome Screen -->
-      <div v-if="!currentUrl" class="welcome-screen">
+      <div v-if="!loadedUrl" class="welcome-screen">
         <h1>PUXA AI Browser</h1>
         <p>AI-powered browser with content analysis and fact-checking</p>
         <div class="welcome-features">
