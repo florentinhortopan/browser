@@ -73,10 +73,14 @@
       <!-- Content Frame (will be handled by Electron) -->
       <div v-else class="content-frame">
         <iframe 
-          :src="currentUrl"
+          v-if="loadedUrl"
+          :src="loadedUrl"
           class="content-iframe"
           @load="onLoadStop"
         ></iframe>
+        <div v-else class="loading-placeholder">
+          <p>Enter a URL and press Enter to navigate</p>
+        </div>
       </div>
     </div>
 
@@ -108,7 +112,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 
-const currentUrl = ref('');
+const currentUrl = ref(''); // Display URL in address bar
+const loadedUrl = ref(''); // Actual URL loaded in iframe
 const canGoBack = ref(false);
 const canGoForward = ref(false);
 const analyzing = ref(false);
@@ -125,14 +130,19 @@ const settings = ref({
 
 function navigate() {
   let url = currentUrl.value.trim();
-  if (!url) return;
+  if (!url) {
+    loadedUrl.value = '';
+    return;
+  }
   
   // Add protocol if missing
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = 'https://' + url;
   }
   
+  // Update both display and loaded URL
   currentUrl.value = url;
+  loadedUrl.value = url; // Only update iframe when we have complete URL
   
   // Auto-analyze if enabled
   if (settings.value.autoAnalyze) {
@@ -149,7 +159,14 @@ function goForward() {
 }
 
 function reload() {
-  if (currentUrl.value) {
+  if (loadedUrl.value) {
+    // Reload current page
+    const url = loadedUrl.value;
+    loadedUrl.value = '';
+    setTimeout(() => {
+      loadedUrl.value = url;
+    }, 100);
+  } else if (currentUrl.value) {
     navigate();
   }
 }
@@ -198,8 +215,8 @@ function onLoadStart() {
 
 function onLoadStop() {
   analyzing.value = false;
-  if (settings.value.autoAnalyze && currentUrl.value) {
-    analyzeContent(currentUrl.value);
+  if (settings.value.autoAnalyze && loadedUrl.value) {
+    analyzeContent(loadedUrl.value);
   }
 }
 
@@ -351,6 +368,15 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 16px;
 }
 
 .welcome-screen {

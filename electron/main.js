@@ -50,11 +50,15 @@ function createWindow() {
     
     console.log('Attempting to load UI...');
     
-    // Try dev server first, then Django (which serves the UI)
-    mainWindow.loadURL(devUrl).catch(() => {
-      console.log('Dev server not available, loading from Django');
-      // Django serves the UI at root URL
-      mainWindow.loadURL('http://localhost:8000/');
+    // Load from Django (which serves the UI)
+    // Don't try dev server in production builds
+    console.log('Loading UI from Django...');
+    mainWindow.loadURL('http://localhost:8000/').catch((err) => {
+      console.error('Failed to load from Django:', err);
+      // Fallback: try dev server if available
+      mainWindow.loadURL(devUrl).catch(() => {
+        console.error('All load attempts failed');
+      });
     });
     
     // Open DevTools for debugging
