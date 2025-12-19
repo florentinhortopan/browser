@@ -3,14 +3,16 @@ URL configuration for browser_app project.
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
+from django.http import HttpResponse
 from django.conf import settings
 from django.conf.urls.static import static
+import os
 
 def root_view(request):
     """Root view - Serve browser UI"""
-    from django.shortcuts import render
-    return render(request, 'browser/index.html')
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'browser', 'index.html')
+    with open(template_path, 'r') as f:
+        return HttpResponse(f.read(), content_type='text/html')
 
 urlpatterns = [
     path('', root_view, name='root'),
