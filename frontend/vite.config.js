@@ -8,6 +8,7 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
+        browser: resolve(__dirname, 'src/browser/index.html'),
         popup: resolve(__dirname, 'src/popup/index.html'),
         background: resolve(__dirname, 'src/background/service-worker.js'),
         content: resolve(__dirname, 'src/content-scripts/content.js')
@@ -18,6 +19,9 @@ export default defineConfig({
         assetFileNames: '[name].[ext]'
       }
     }
+  },
+  server: {
+    port: 3000
   }
 });
 

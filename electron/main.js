@@ -31,6 +31,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webviewTag: true, // Enable webview tag
       preload: path.join(__dirname, 'preload.js')
     },
     titleBarStyle: 'hiddenInset',
@@ -39,9 +40,22 @@ function createWindow() {
   
   // Wait for Django to start, then load frontend
   setTimeout(() => {
-    // Load root page (shows API info)
-    // In production, this would load the Vue.js extension UI
-    mainWindow.loadURL('http://localhost:8000/');
+    // Load the Vue.js browser UI
+    // First try to load from Vite dev server, then fallback to built files
+    const devUrl = 'http://localhost:3000/src/browser/index.html';
+    const prodUrl = `file://${path.join(__dirname, '../frontend/dist/src/browser/index.html')}`;
+    
+    console.log('Loading UI from:', prodUrl);
+    
+    // Try dev server first, then production build
+    mainWindow.loadURL(devUrl).catch(() => {
+      mainWindow.loadURL(prodUrl).catch((err) => {
+        console.error('Failed to load UI:', err);
+        console.log('Falling back to API root');
+        // Fallback to API root
+        mainWindow.loadURL('http://localhost:8000/');
+      });
+    });
     
     // Open DevTools for debugging
     mainWindow.webContents.openDevTools();
