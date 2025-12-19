@@ -5,7 +5,11 @@ from rest_framework import status
 class HealthView(APIView):
     """Health check endpoint"""
     def get(self, request):
-        return Response({'status': 'ok', 'service': 'PUXA Browser API'})
+        return Response({
+            'status': 'ok', 
+            'service': 'PUXA Browser API',
+            'version': '1.0.0'
+        })
 
 class AnalyzeContentView(APIView):
     """Analyze web content"""
@@ -51,4 +55,3 @@ class DefluffScoreView(APIView):
                 'value_ratio': 70
             }
         })
-

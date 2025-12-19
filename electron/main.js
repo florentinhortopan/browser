@@ -39,9 +39,9 @@ function createWindow() {
   
   // Wait for Django to start, then load frontend
   setTimeout(() => {
-    // Load Django API health check page (simple test page)
+    // Load root page (shows API info)
     // In production, this would load the Vue.js extension UI
-    mainWindow.loadURL('http://localhost:8000/api/health/');
+    mainWindow.loadURL('http://localhost:8000/');
     
     // Open DevTools for debugging
     mainWindow.webContents.openDevTools();
