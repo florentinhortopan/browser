@@ -9,7 +9,8 @@ from django.conf.urls.static import static
 
 def root_view(request):
     """Root view - Serve browser UI"""
-    return TemplateView.as_view(template_name='browser/index.html')(request)
+    from django.shortcuts import render
+    return render(request, 'browser/index.html')
 
 urlpatterns = [
     path('', root_view, name='root'),
