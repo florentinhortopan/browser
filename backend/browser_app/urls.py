@@ -22,5 +22,11 @@ urlpatterns = [
 
 # Serve static files in development
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else None)
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()
+    
+    # Also serve from browser_app/static directly
+    import os
+    browser_static = os.path.join(os.path.dirname(__file__), 'static')
+    urlpatterns += static(settings.STATIC_URL, document_root=browser_static)
 

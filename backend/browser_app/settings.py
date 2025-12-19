@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    'browser_app',  # Add this app so Django finds static files
 ]
 
 MIDDLEWARE = [
@@ -70,7 +71,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR.parent / 'frontend' / 'dist',
-    BASE_DIR / 'static',
 ]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
