@@ -7,9 +7,9 @@ __pycache__/
 env/
 venv/
 ENV/
-build/
+# build/ - Don't ignore build/ directory, only build artifacts
 develop-eggs/
-dist/
+# dist/ - Don't ignore dist/ directory (needed for extension builds)
 downloads/
 eggs/
 .eggs/
@@ -51,7 +51,11 @@ dist-ssr/
 
 # Build artifacts
 out/
-build/
+build/out/
+build/chromium_src/
+build/download_cache/
+build/*.app
+build/*.dmg
 *.app
 *.dmg
 
