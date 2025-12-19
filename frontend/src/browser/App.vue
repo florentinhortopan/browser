@@ -97,20 +97,25 @@
           v-model="currentUrl" 
           @keyup.enter="navigate"
           class="welcome-search"
-          placeholder="Enter URL to start browsing..."
+          placeholder="Enter URL or search query..."
         />
       </div>
       
       <!-- Content Frame (will be handled by Electron) -->
       <div v-else class="content-frame">
         <iframe 
-          v-if="loadedUrl"
+          v-if="loadedUrl && !pageError"
           :src="loadedUrl"
           class="content-iframe"
           @load="onLoadStop"
         ></iframe>
-        <div v-else class="loading-placeholder">
-          <p>Enter a URL and press Enter to navigate</p>
+        <div v-if="pageError" class="error-message">
+          <h3>⚠️ Failed to load page</h3>
+          <p>{{ pageError }}</p>
+          <button @click="reload" class="retry-btn">Retry</button>
+        </div>
+        <div v-else-if="!loadedUrl" class="loading-placeholder">
+          <p>Enter a URL or search query and press Enter to navigate</p>
         </div>
       </div>
     </div>
@@ -315,13 +320,10 @@ function onLoadStop() {
   }
 }
 
-function onLoadError() {
-  isLoading.value = false;
-  pageError.value = 'Unable to load this page. It may be blocked or unavailable.';
-}
-
 function onLoadError(event) {
   console.error('Load error:', event);
+  isLoading.value = false;
+  pageError.value = 'Unable to load this page. It may be blocked or unavailable.';
   analyzing.value = false;
 }
 
@@ -481,6 +483,60 @@ onMounted(() => {
   height: 100%;
   color: #666;
   font-size: 16px;
+}
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: #d32f2f;
+}
+
+.error-message h3 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.error-message p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.retry-btn {
+  padding: 0.75rem 1.5rem;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.retry-btn:hover {
+  background: #1565c0;
+}
+
+.score-breakdown {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.85rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.25rem 0;
+  color: #666;
+}
+
+.fact-checks {
+  color: #2e7d32;
 }
 
 .welcome-screen {
