@@ -134,10 +134,10 @@ import { ref, computed, onMounted } from 'vue';
 
 const currentUrl = ref(''); // Display URL in address bar
 const loadedUrl = ref(''); // Actual URL loaded in iframe
-const history = ref([]); // Navigation history
-const historyIndex = ref(-1); // Current position in history
+const history = ref([]); // Navigation history array
+const historyIndex = ref(-1); // Current position in history (-1 = no history)
 const canGoBack = computed(() => historyIndex.value > 0);
-const canGoForward = computed(() => historyIndex.value < history.value.length - 1);
+const canGoForward = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
 const analyzing = ref(false);
 const analysisResult = ref(null);
 const defluffScore = ref(null);
