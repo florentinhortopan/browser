@@ -3,9 +3,29 @@
     <!-- Browser Toolbar -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <button class="nav-btn" @click="goBack" :disabled="!canGoBack">←</button>
-        <button class="nav-btn" @click="goForward" :disabled="!canGoForward">→</button>
-        <button class="nav-btn" @click="reload">↻</button>
+        <button 
+          class="nav-btn" 
+          @click="goBack" 
+          :disabled="!canGoBack"
+          :title="canGoBack ? 'Go back' : 'No history'"
+        >
+          ←
+        </button>
+        <button 
+          class="nav-btn" 
+          @click="goForward" 
+          :disabled="!canGoForward"
+          :title="canGoForward ? 'Go forward' : 'No forward history'"
+        >
+          →
+        </button>
+        <button 
+          class="nav-btn" 
+          @click="reload"
+          title="Reload page"
+        >
+          ↻
+        </button>
       </div>
       
       <!-- Address Bar -->
@@ -114,8 +134,10 @@ import { ref, computed, onMounted } from 'vue';
 
 const currentUrl = ref(''); // Display URL in address bar
 const loadedUrl = ref(''); // Actual URL loaded in iframe
-const canGoBack = ref(false);
-const canGoForward = ref(false);
+const history = ref([]); // Navigation history
+const historyIndex = ref(-1); // Current position in history
+const canGoBack = computed(() => historyIndex.value > 0);
+const canGoForward = computed(() => historyIndex.value < history.value.length - 1);
 const analyzing = ref(false);
 const analysisResult = ref(null);
 const defluffScore = ref(null);
@@ -140,6 +162,14 @@ function navigate() {
     url = 'https://' + url;
   }
   
+  // Add to history (remove any forward history if we're not at the end)
+  if (historyIndex.value < history.value.length - 1) {
+    history.value = history.value.slice(0, historyIndex.value + 1);
+  }
+  
+  history.value.push(url);
+  historyIndex.value = history.value.length - 1;
+  
   // Update both display and loaded URL
   currentUrl.value = url;
   loadedUrl.value = url; // Only update iframe when we have complete URL
@@ -151,11 +181,31 @@ function navigate() {
 }
 
 function goBack() {
-  // TODO: Implement browser history
+  if (canGoBack.value) {
+    historyIndex.value--;
+    const url = history.value[historyIndex.value];
+    currentUrl.value = url;
+    loadedUrl.value = url;
+    
+    // Auto-analyze if enabled
+    if (settings.value.autoAnalyze) {
+      analyzeContent(url);
+    }
+  }
 }
 
 function goForward() {
-  // TODO: Implement browser history
+  if (canGoForward.value) {
+    historyIndex.value++;
+    const url = history.value[historyIndex.value];
+    currentUrl.value = url;
+    loadedUrl.value = url;
+    
+    // Auto-analyze if enabled
+    if (settings.value.autoAnalyze) {
+      analyzeContent(url);
+    }
+  }
 }
 
 function reload() {
@@ -215,6 +265,12 @@ function onLoadStart() {
 
 function onLoadStop() {
   analyzing.value = false;
+  // Update address bar to match loaded URL (in case of redirects)
+  if (loadedUrl.value) {
+    // Note: We can't read iframe URL due to cross-origin restrictions
+    // So we keep the currentUrl as is
+  }
+  
   if (settings.value.autoAnalyze && loadedUrl.value) {
     analyzeContent(loadedUrl.value);
   }
@@ -288,8 +344,12 @@ onMounted(() => {
 }
 
 .nav-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+}
+
+.nav-btn:not(:disabled):hover {
+  background: #e0e0e0;
 }
 
 .defluff-badge {
